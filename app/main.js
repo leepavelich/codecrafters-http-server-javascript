@@ -3,18 +3,25 @@ const net = require("net");
 const server = net.createServer((socket) => {
   socket.on("data", (data) => {
     const d = data.toString();
+    const [startLine, ...headers] = d.split("\r\n");
 
-    if (d.startsWith("GET")) {
-      const [_get, path, _httpVersion] = d.split(" ");
+    const [httpMethod, path, httpVersion] = startLine.split(" ");
 
+    if (httpMethod === "GET") {
       if (path === "/") {
-        socket.write(`HTTP/1.1 200 OK\r\n\r\n`);
+        socket.write(`${httpVersion} 200 OK\r\n\r\n`);
       } else if (path.startsWith("/echo/")) {
         const str = path.slice(6);
-        const res = `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${str.length}\r\n\r\n${str}\r\n`;
+        const res = `${httpVersion} 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${str.length}\r\n\r\n${str}\r\n`;
+        socket.write(res);
+      } else if (path === "/user-agent") {
+        const userAgent = headers.find((h) => h.startsWith("User-Agen"));
+        const str = userAgent.slice(12);
+        console.log(str);
+        const res = `${httpVersion} 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${str.length}\r\n\r\n${str}\r\n`;
         socket.write(res);
       } else {
-        socket.write(`HTTP/1.1 404 NOT FOUND\r\n\r\n`);
+        socket.write(`${httpVersion} 404 NOT FOUND\r\n\r\n`);
       }
     }
   });
