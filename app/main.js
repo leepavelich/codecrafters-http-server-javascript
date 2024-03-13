@@ -35,11 +35,23 @@ const server = net.createServer((socket) => {
           const res = `${httpVersion} 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${content.length}\r\n\r\n${content}\r\n`;
           socket.write(res);
         } else {
-          socket.write(`${httpVersion} 404 NOT FOUND\r\n\n`);
+          socket.write(`${httpVersion} 404 NOT FOUND\r\n\r\n`);
           socket.end();
         }
       } else {
         socket.write(`${httpVersion} 404 NOT FOUND\r\n\r\n`);
+      }
+    } else if (httpMethod === "POST") {
+      if (path.startsWith("/files/")) {
+        const fileName = path.slice(7);
+        const pathName = `${directory}/${fileName}`;
+        const body = headers.at(-1);
+
+        fs.writeFileSync(pathName, body);
+
+        const res = `${httpVersion} 201 OK\r\n\r\n`;
+
+        socket.write(res);
       }
     }
   });
