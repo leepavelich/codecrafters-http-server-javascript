@@ -1,13 +1,14 @@
 const net = require("net");
 const fs = require("fs");
 
-let directory;
-
-if (process.argv.length === 4) {
-  if (process.argv[2] == "--directory") {
-    directory = process.argv[3];
+const getDirectoryFromArgs = () => {
+  if (process.argv.length === 4 && process.argv[2] === "--directory") {
+    return process.argv[3];
   }
-}
+  return null;
+};
+
+const directory = getDirectoryFromArgs();
 
 const server = net.createServer((socket) => {
   socket.on("data", (data) => {
