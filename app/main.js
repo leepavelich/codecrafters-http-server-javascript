@@ -20,7 +20,7 @@ const sendResponse = (
   socket.write(`HTTP/1.1 ${status} ${statusText}\r\n${headers}${body}`);
 };
 
-const handleGetRequest = (socket, path, httpVersion, headers) => {
+const handleGetRequest = (socket, path, headers) => {
   if (path === "/") {
     sendResponse(socket, { body: "Welcome!" });
   } else if (path.startsWith("/echo/")) {
@@ -54,25 +54,29 @@ const handleGetRequest = (socket, path, httpVersion, headers) => {
   }
 };
 
-const handlePostRequest = (socket, path, httpVersion, headers, body) => {
+const handlePostRequest = (socket, path, body) => {
   if (path.startsWith("/files/") && directory) {
     const fileName = path.slice(7);
     fs.writeFileSync(`${directory}/${fileName}`, body);
-    sendResponse(socket, { status: 201, statusText: "Created" });
+    sendResponse(socket, { status: 201, statusText: "CREATED" });
   }
 };
 
 const server = net.createServer((socket) => {
   socket.on("data", (data) => {
-    const d = data.toString();
-    const [startLine, ...headers] = d.split("\r\n");
-    const [httpMethod, path, httpVersion] = startLine.split(" ");
-    const body = headers.pop();
+    const [startLine, ...headers] = data.toString().split("\r\n");
+    const [httpMethod, path, _httpVersion] = startLine.split(" ");
 
-    if (httpMethod === "GET") {
-      handleGetRequest(socket, path, httpVersion, headers);
-    } else if (httpMethod === "POST") {
-      handlePostRequest(socket, path, httpVersion, headers, body);
+    switch (httpMethod) {
+      case "GET": {
+        handleGetRequest(socket, path, headers);
+        break;
+      }
+      case "POST": {
+        const body = headers.pop();
+        handlePostRequest(socket, path, body);
+        break;
+      }
     }
   });
 
